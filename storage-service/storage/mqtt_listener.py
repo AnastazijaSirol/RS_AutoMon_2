@@ -11,6 +11,7 @@ TOPICS = [
     ("traffic/entrance", 0),
     ("traffic/camera", 0),
     ("traffic/restarea", 0),
+    ("traffic/exit", 0),
 ]
 
 def on_connect(client, userdata, flags, rc):

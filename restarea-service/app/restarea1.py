@@ -1,7 +1,7 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from mqtt_client import publish_restarea
+from mqtt_client import publish_reading
 import state
 
 RESTAREA_ID = "RESTAREA1"
@@ -15,7 +15,6 @@ EXIT_PASS_CHANCE = 0.5
 
 async def run_restarea1():
     while True:
-        # vozila s ulaza
         for v in state.entrances:
             key = f"{v['vehicle_id']}_entry_{v['timestamp']}"
             if key in state.processed_restarea1:
@@ -43,12 +42,11 @@ async def run_restarea1():
                 "timestamp_entrance": rest_entry.strftime("%Y-%m-%d %H:%M:%S"),
                 "timestamp_exit": rest_exit.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            publish_restarea(data)
-            print(f"[RESTAREA1] {v['vehicle_id']} staje u {data['timestamp_entrance']}")
+            publish_reading(data)
+            print(f"[RESTAREA1] {v['vehicle_id']} stops in {data['timestamp_entrance']}")
             state.processed_restarea1.add(key)
             await asyncio.sleep(random.uniform(1.0, 2.0))
 
-        # vozila koja izlaze
         for v in state.exits:
             key = f"{v['vehicle_id']}_exit_{v['timestamp']}"
             if key in state.processed_restarea1:
@@ -76,8 +74,8 @@ async def run_restarea1():
                 "timestamp_entrance": rest_entry_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "timestamp_exit": rest_exit_time.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            publish_restarea(data)
-            print(f"[RESTAREA1] {v['vehicle_id']} prije izlaza staje u {data['timestamp_entrance']}")
+            publish_reading(data)
+            print(f"[RESTAREA1] {v['vehicle_id']} stops in {data['timestamp_entrance']}")
             state.processed_restarea1.add(key)
             await asyncio.sleep(random.uniform(1.0, 2.0))
 

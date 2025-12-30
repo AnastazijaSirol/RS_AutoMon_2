@@ -4,16 +4,13 @@ import state
 
 BROKER = "localhost"
 PORT = 1883
-TOPIC_SUBSCRIBE = "traffic/entrance"
+TOPIC_IN = "traffic/entrance"
 TOPIC = "traffic/camera"
 
 _client = None
 
 def on_connect(client, userdata, flags, rc):
-    print("Camera-service connected to MQTT")
-    client.subscribe(TOPIC_SUBSCRIBE)
-    print(f"Subscribed to {TOPIC_SUBSCRIBE}")
-
+    client.subscribe(TOPIC_IN)
 
 def on_message(client, userdata, msg):
     try:
@@ -25,7 +22,6 @@ def on_message(client, userdata, msg):
         )
     except Exception as e:
         print("Camera-service error:", e)
-
 
 def connect():
     global _client

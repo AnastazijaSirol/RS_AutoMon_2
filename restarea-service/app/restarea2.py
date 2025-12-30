@@ -1,7 +1,7 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from mqtt_client import publish_restarea
+from mqtt_client import publish_reading
 import state
 
 RESTAREA_ID = "RESTAREA2"
@@ -42,8 +42,8 @@ async def run_restarea2():
                 "timestamp_entrance": rest_entry.strftime("%Y-%m-%d %H:%M:%S"),
                 "timestamp_exit": rest_exit.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            publish_restarea(data)
-            print(f"[RESTAREA2] {v['vehicle_id']} staje u {data['timestamp_entrance']}")
+            publish_reading(data)
+            print(f"[RESTAREA2] {v['vehicle_id']} stops {data['timestamp_entrance']}")
             state.processed_restarea1.add(key)
             await asyncio.sleep(random.uniform(1.0, 2.0))
 
@@ -74,8 +74,8 @@ async def run_restarea2():
                 "timestamp_entrance": rest_entry_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "timestamp_exit": rest_exit_time.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            publish_restarea(data)
-            print(f"[RESTAREA2] {v['vehicle_id']} prije izlaza staje u {data['timestamp_entrance']}")
+            publish_reading(data)
+            print(f"[RESTAREA2] {v['vehicle_id']} stops {data['timestamp_entrance']}")
             state.processed_restarea2.add(key)
             await asyncio.sleep(random.uniform(1.0, 2.0))
 

@@ -13,7 +13,7 @@ async def run():
         reading = generate_reading(CAMERA_ID, LOCATION)
         publish_reading(reading)
         
-        print(f"[UMAG] Vozilo {reading['vehicle_id']} ušlo u {reading['timestamp']}")
+        print(f"[UMAG] Vozilo {reading['vehicle_id']} enters {reading['timestamp']}")
 
         delay = 30
         if random.random() < 0.1:
