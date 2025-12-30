@@ -9,6 +9,7 @@ PORT = 1883
 
 TOPICS = [
     ("traffic/entrance", 0),
+    ("traffic/camera", 0),
 ]
 
 def on_connect(client, userdata, flags, rc):

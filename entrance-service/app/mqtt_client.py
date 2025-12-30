@@ -5,10 +5,18 @@ BROKER = "localhost"
 PORT = 1883
 TOPIC = "traffic/entrance"
 
+_client = None
+
 def connect():
-    client = mqtt.Client()
-    client.connect("localhost", 1883)
-    return client
+    global _client
+
+    if _client is None:
+        _client = mqtt.Client()
+        _client.connect(BROKER, PORT)
+        _client.loop_start()
+
+    return _client
+
 
 def publish_reading(data: dict):
     client = connect()
