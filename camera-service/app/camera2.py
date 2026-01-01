@@ -32,7 +32,7 @@ async def process_camera2():
                     travel_time = 55
 
             elif origin == "PULA-ENTRANCE":
-                if e["vehicle_id"] not in state.camera1_passed:
+                if e["vehicle_id"] not in state.camera2_passed:
                     must_pass = True
                     travel_time = 45
 

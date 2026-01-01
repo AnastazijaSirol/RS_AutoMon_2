@@ -6,7 +6,6 @@ from mqtt_client import publish_reading
 
 CAMERA_ID = "RIJEKA-ENTRANCE"
 LOCATION = "Ulaz Rijeka"
-TOPIC = "traffic/entrance/rijeka"
 
 async def run():
     while True:
