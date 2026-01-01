@@ -6,9 +6,16 @@ import state
 
 EXIT_ID = "PULA-EXIT"
 LOCATION = "Izlaz Pula"
+
 TRAVEL_TIME_FROM_RIJEKA = 90
 TRAVEL_TIME_FROM_UMAG = 60
 TRAVEL_VARIATION = 10
+
+MIN_TRAVEL_TIME = {
+    "RIJEKA-ENTRANCE": 70,
+    "UMAG-ENTRANCE": 45
+}
+
 TOPIC_OUT = "traffic/exit"
 
 async def run():
@@ -23,23 +30,42 @@ async def run():
                 state.processed_pula.add(key)
                 continue
 
-            entry_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-            must_exit = False
-            travel_time = None
+            try:
+                entry_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                state.processed_pula.add(key)
+                continue
 
-            if origin == "RIJEKA-ENTRANCE" and vehicle_id in state.camera1_passed and vehicle_id not in state.camera2_passed:
+            must_exit = False
+            base_travel_time = None
+
+            if (
+                origin == "RIJEKA-ENTRANCE"
+                and vehicle_id in state.camera1_passed
+                and vehicle_id not in state.camera2_passed
+            ):
                 must_exit = True
-                travel_time = TRAVEL_TIME_FROM_RIJEKA
-            elif origin == "UMAG-ENTRANCE" and vehicle_id in state.camera2_passed and vehicle_id not in state.camera1_passed:
+                base_travel_time = TRAVEL_TIME_FROM_RIJEKA
+
+            elif (
+                origin == "UMAG-ENTRANCE"
+                and vehicle_id in state.camera2_passed
+                and vehicle_id not in state.camera1_passed
+            ):
                 must_exit = True
-                travel_time = TRAVEL_TIME_FROM_UMAG
+                base_travel_time = TRAVEL_TIME_FROM_UMAG
 
             if not must_exit:
                 state.processed_pula.add(key)
                 continue
 
-            travel_time += random.randint(-TRAVEL_VARIATION, TRAVEL_VARIATION)
-            travel_time = max(1, travel_time)
+            travel_time = base_travel_time + random.randint(
+                -TRAVEL_VARIATION, TRAVEL_VARIATION
+            )
+
+            min_allowed = MIN_TRAVEL_TIME.get(origin, 10)
+            travel_time = max(min_allowed, travel_time)
+
             exit_time = entry_time + timedelta(minutes=travel_time)
 
             reading = {
@@ -51,7 +77,13 @@ async def run():
             }
 
             publish_reading(TOPIC_OUT, reading)
-            print(f"[PULA-EXIT] Vehicle {vehicle_id} exits at {reading['timestamp']}")
+
+            print(
+                f"[PULA-EXIT] Vehicle {vehicle_id} "
+                f"({origin}) exits at {reading['timestamp']} "
+                f"(travel {travel_time} min)"
+            )
+
             state.processed_pula.add(key)
 
         await asyncio.sleep(5)

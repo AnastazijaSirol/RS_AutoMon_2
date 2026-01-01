@@ -1,27 +1,49 @@
 import json
 import paho.mqtt.client as mqtt
+import state
 
 BROKER = "localhost"
 PORT = 1883
 
-_client = None
-
-TOPIC_IN = "traffic/entrance"
-TOPIC_IN2 = "traffic/exit"
+TOPIC_IN_ENTRANCE = "traffic/entrance"
+TOPIC_IN_EXIT = "traffic/exit"
 TOPIC_OUT = "traffic/restarea"
 
-def connect(on_message_callback):
+_client = None
+
+
+def on_connect(client, userdata, flags, rc):
+    client.subscribe(TOPIC_IN_ENTRANCE)
+    client.subscribe(TOPIC_IN_EXIT)
+
+
+def on_message(client, userdata, msg):
+    try:
+        data = json.loads(msg.payload.decode())
+
+        if str(data.get("is_entrance", False)).lower() == "true":
+            state.entrances.append(data)
+            print(f"[RESTAREA] Entrance {data['vehicle_id']}")
+
+        elif str(data.get("is_exit", False)).lower() == "true":
+            state.exits.append(data)
+            print(f"[RESTAREA] Exit {data['vehicle_id']}")
+
+    except Exception as e:
+        print("Restarea-service error:", e)
+
+
+def connect():
     global _client
     if _client is None:
         _client = mqtt.Client()
-        _client.on_message = on_message_callback
+        _client.on_connect = on_connect
+        _client.on_message = on_message
         _client.connect(BROKER, PORT)
-        _client.subscribe(TOPIC_IN)
-        _client.subscribe(TOPIC_IN2)
         _client.loop_start()
     return _client
 
+
 def publish_reading(data: dict):
-    if _client is None:
-        raise RuntimeError("MQTT client not connected")
-    _client.publish(TOPIC_OUT, json.dumps(data))
+    client = connect()
+    client.publish(TOPIC_OUT, json.dumps(data))

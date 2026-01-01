@@ -1,24 +1,52 @@
 import json
 import paho.mqtt.client as mqtt
+import state
 
 BROKER = "localhost"
 PORT = 1883
 
+TOPIC_IN_CAMERA = "traffic/camera"
+TOPIC_IN_ENTRANCE = "traffic/entrance"
+TOPIC_OUT = "traffic/exit"
+
 _client = None
 
-def connect(on_message_callback=None, topics=None):
+
+def on_connect(client, userdata, flags, rc):
+    client.subscribe(TOPIC_IN_CAMERA)
+    client.subscribe(TOPIC_IN_ENTRANCE)
+
+
+def on_message(client, userdata, msg):
+    try:
+        data = json.loads(msg.payload.decode())
+        state.entrances.append(data)
+
+        vehicle_id = data.get("vehicle_id")
+        cam_id = data.get("camera_id")
+
+        if cam_id == "CAMERA1":
+            state.camera1_passed.add(vehicle_id)
+        elif cam_id == "CAMERA2":
+            state.camera2_passed.add(vehicle_id)
+
+        print(f"[EXIT] Received {vehicle_id} from {cam_id}")
+
+    except Exception as e:
+        print("Exit-service error:", e)
+
+
+def connect():
     global _client
     if _client is None:
         _client = mqtt.Client()
-        if on_message_callback:
-            _client.on_message = on_message_callback
+        _client.on_connect = on_connect
+        _client.on_message = on_message
         _client.connect(BROKER, PORT)
-        if topics:
-            for topic in topics:
-                _client.subscribe(topic)
         _client.loop_start()
     return _client
 
-def publish_reading(topic, data):
+
+def publish_reading(data: dict):
     client = connect()
-    client.publish(topic, json.dumps(data), retain=True)
+    client.publish(TOPIC_OUT, json.dumps(data))

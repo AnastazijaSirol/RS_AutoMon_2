@@ -6,9 +6,16 @@ import state
 
 EXIT_ID = "UMAG-EXIT"
 LOCATION = "Izlaz Umag"
+
 TRAVEL_TIME_FROM_PULA = 60
 TRAVEL_TIME_FROM_RIJEKA = 70
 TRAVEL_VARIATION = 10
+
+MIN_TRAVEL_TIME = {
+    "PULA-ENTRANCE": 45,
+    "RIJEKA-ENTRANCE": 55
+}
+
 TOPIC_OUT = "traffic/exit"
 
 async def run():
@@ -23,23 +30,34 @@ async def run():
                 state.processed_umag.add(key)
                 continue
 
-            entry_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            try:
+                entry_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                state.processed_umag.add(key)
+                continue
+
             must_exit = False
-            travel_time = None
+            base_travel_time = None
 
             if origin == "RIJEKA-ENTRANCE" and vehicle_id in state.camera2_passed:
                 must_exit = True
-                travel_time = TRAVEL_TIME_FROM_RIJEKA
+                base_travel_time = TRAVEL_TIME_FROM_RIJEKA
+
             elif origin == "PULA-ENTRANCE" and vehicle_id in state.camera2_passed:
                 must_exit = True
-                travel_time = TRAVEL_TIME_FROM_PULA
+                base_travel_time = TRAVEL_TIME_FROM_PULA
 
             if not must_exit:
                 state.processed_umag.add(key)
                 continue
 
-            travel_time += random.randint(-TRAVEL_VARIATION, TRAVEL_VARIATION)
-            travel_time = max(1, travel_time)
+            travel_time = base_travel_time + random.randint(
+                -TRAVEL_VARIATION, TRAVEL_VARIATION
+            )
+
+            min_allowed = MIN_TRAVEL_TIME.get(origin, 10)
+            travel_time = max(min_allowed, travel_time)
+
             exit_time = entry_time + timedelta(minutes=travel_time)
 
             reading = {
@@ -51,7 +69,13 @@ async def run():
             }
 
             publish_reading(TOPIC_OUT, reading)
-            print(f"[UMAG-EXIT] Vehicle {vehicle_id} exits at {reading['timestamp']}")
+
+            print(
+                f"[UMAG-EXIT] Vehicle {vehicle_id} "
+                f"({origin}) exits at {reading['timestamp']} "
+                f"(travel {travel_time} min)"
+            )
+
             state.processed_umag.add(key)
 
         await asyncio.sleep(5)
