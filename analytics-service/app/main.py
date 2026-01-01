@@ -1,4 +1,4 @@
-from cli import app
+from cli import interactive_menu
 
 if __name__ == "__main__":
-    app()
+    interactive_menu()

@@ -16,8 +16,6 @@ MIN_TRAVEL_TIME = {
     "UMAG-ENTRANCE": 50
 }
 
-TOPIC_OUT = "traffic/exit"
-
 async def run():
     while True:
         for e in state.entrances:
@@ -76,7 +74,7 @@ async def run():
                 "is_exit": True
             }
 
-            publish_reading(TOPIC_OUT, reading)
+            publish_reading(reading)
 
             print(
                 f"[RIJEKA-EXIT] Vehicle {vehicle_id} "

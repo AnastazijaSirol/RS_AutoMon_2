@@ -58,3 +58,31 @@ def fast_travel():
             f"{r['route'][0]} -> {r['route'][1]} : "
             f"{r['actual']} min (očekivano {r['expected']} min)"
         )
+
+def interactive_menu():
+    while True:
+        print("\nOdaberite opciju:")
+        print("1 - Broj vozila na ulazima")
+        print("2 - Broj vozila na izlazima")
+        print("3 - Vozila koja su prekoračila brzinu")
+        print("4 - Prosječno vrijeme na odmorištima")
+        print("5 - Vozila koja su putovala prebrzo")
+        print("0 - Izlaz")
+
+        choice = input("Unesite broj: ").strip()
+
+        if choice == "1":
+            entrances()
+        elif choice == "2":
+            exits()
+        elif choice == "3":
+            speeding()
+        elif choice == "4":
+            restareas()
+        elif choice == "5":
+            fast_travel()
+        elif choice == "0":
+            print("Izlaz iz programa.")
+            break
+        else:
+            print("Nepoznata opcija, pokušajte ponovno.")
