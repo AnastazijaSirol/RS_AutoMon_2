@@ -2,8 +2,13 @@ import json
 import paho.mqtt.client as mqtt
 import state
 
-BROKER = "localhost"
-PORT = 1883
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+BROKER = os.getenv("BROKER")
+PORT = int(os.getenv("PORT"))
 
 TOPIC_IN_CAMERA = "traffic/camera"
 TOPIC_IN_ENTRANCE = "traffic/entrance"
@@ -49,4 +54,4 @@ def connect():
 
 def publish_reading(data: dict):
     client = connect()
-    client.publish(TOPIC_OUT, json.dumps(data))
+    client.publish(TOPIC_OUT, json.dumps(data), retain=False)

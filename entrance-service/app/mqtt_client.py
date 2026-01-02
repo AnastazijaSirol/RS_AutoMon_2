@@ -1,8 +1,13 @@
 import json
 import paho.mqtt.client as mqtt
 
-BROKER = "localhost"
-PORT = 1883
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+BROKER = os.getenv("BROKER")
+PORT = int(os.getenv("PORT"))
 TOPIC = "traffic/entrance"
 
 _client = None

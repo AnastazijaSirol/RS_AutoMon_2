@@ -4,8 +4,13 @@ import paho.mqtt.client as mqtt
 from .models import Reading
 from .database import insert_reading
 
-BROKER = "localhost"
-PORT = 1883
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+BROKER = os.getenv("BROKER")
+PORT = int(os.getenv("PORT"))
 
 TOPICS = [
     ("traffic/entrance", 0),
