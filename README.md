@@ -20,7 +20,7 @@ Aplikacija je podijeljena na sljedeće mikroservise:
 - **exit-service**  
   Simulira izlazak vozila s autoceste (Pula, Rijeka, Umag)
 
-  - **restarea-service**  
+- **restarea-service**  
   Simulira zaustavljanje vozila na odmorištima
 
 - **storage-service**  
