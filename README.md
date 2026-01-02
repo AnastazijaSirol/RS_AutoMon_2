@@ -72,7 +72,7 @@ Subscribers:
 Poruka se šalje kada vozilo uđe na autocestu.
 
 Primjer poruke:
-
+```
 {
   "camera_id": "PULA-ENTRANCE",
   "camera_location": Ulaz Pula,
@@ -80,27 +80,30 @@ Primjer poruke:
   "timestamp": "2026-01-02 12:30:45",
   "is_entrance": True
 }
-
-### Topic: **traffic/restarea**
+```
+### Topic: **traffic/camera**
 
 Publisher: 
-- restarea-service
+- camera-service
 
 Subscribers:
+- exit-service
 - storage-service
 
-Poruka se šalje kada se vozilo zaustavi na odmorištu.
+Poruka se šalje kada vozilo prođe pored kamere.
 
 Primjer poruke:
-
+```
 {
-  "camera_id": RESTAREA1,
-  "camera_location": Odmorište Pula,
-  "vehicle_id": PU723md,
-  "is_restarea": True,
-  "timestamp_entrance": "2026-01-02 12:30:45",
-  "timestamp_exit": "2026-01-02 12:37:32",
+  "camera_id": CAMERA1,
+  "camera_location": Kamera Rijeka,
+  "vehicle_id": PU723MD,
+  "timestamp": "2026-01-02 12:30:45",
+  "is_camera": True,
+  "speed": 130,
+  "speed_limit": 120
 }
+```
 
 ### Topic: **traffic/exit**
 
@@ -115,6 +118,7 @@ Poruka se šalje kada vozilo izađe s autoceste.
 
 Primjer poruke:
 
+```
 {
   "camera_id": PULA-EXIT,
   "camera_location": Izlaz Pula,
@@ -122,3 +126,27 @@ Primjer poruke:
   "timestamp": "2026-01-02 12:30:45",
   "is_exit": True
 }
+```
+
+### Topic: **traffic/restarea**
+
+Publisher: 
+- restarea-service
+
+Subscribers:
+- storage-service
+
+Poruka se šalje kada se vozilo zaustavi na odmorištu.
+
+Primjer poruke:
+
+```
+{
+  "camera_id": RESTAREA1,
+  "camera_location": Odmorište Pula,
+  "vehicle_id": PU723md,
+  "is_restarea": True,
+  "timestamp_entrance": "2026-01-02 12:30:45",
+  "timestamp_exit": "2026-01-02 12:37:32",
+}
+```
