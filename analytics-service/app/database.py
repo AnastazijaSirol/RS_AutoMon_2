@@ -6,9 +6,7 @@ import os
 
 load_dotenv()
 
-PATH = os.getenv("PATH")
-
-DB_PATH = Path(PATH)
+DB_PATH = Path(os.getenv("DB_PATH"))
 
 def get_connection():
     return sqlite3.connect(DB_PATH)

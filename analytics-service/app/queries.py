@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def count_entrances(conn):
     cur = conn.cursor()
     cur.execute("""
@@ -9,6 +10,7 @@ def count_entrances(conn):
         GROUP BY camera_id
     """)
     return cur.fetchall()
+
 
 def count_exits(conn):
     cur = conn.cursor()
@@ -20,6 +22,7 @@ def count_exits(conn):
     """)
     return cur.fetchall()
 
+
 def speeding_vehicles(conn):
     cur = conn.cursor()
     cur.execute("""
@@ -29,6 +32,7 @@ def speeding_vehicles(conn):
           AND speed > speed_limit
     """)
     return cur.fetchall()
+
 
 def avg_rest_time(conn):
     cur = conn.cursor()
@@ -45,49 +49,6 @@ def avg_rest_time(conn):
     """)
     return cur.fetchall()
 
-def get_vehicle_entry_exit(conn, vehicle_id):
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT camera_id, timestamp
-        FROM readings
-        WHERE vehicle_id = ?
-          AND is_entrance = 1
-        ORDER BY timestamp ASC
-        LIMIT 1
-    """, (vehicle_id,))
-    entry = cur.fetchone()
-
-    cur.execute("""
-        SELECT camera_id, timestamp
-        FROM readings
-        WHERE vehicle_id = ?
-          AND is_exit = 1
-        ORDER BY timestamp DESC
-        LIMIT 1
-    """, (vehicle_id,))
-    exit_ = cur.fetchone()
-
-    return entry, exit_
-
-def get_restarea_time(conn, vehicle_id):
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT timestamp_entrance, timestamp_exit
-        FROM readings
-        WHERE vehicle_id = ?
-          AND is_restarea = 1
-          AND timestamp_exit IS NOT NULL
-    """, (vehicle_id,))
-
-    total = 0
-    for start, end in cur.fetchall():
-        t1 = datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
-        t2 = datetime.strptime(end, "%Y-%m-%d %H:%M:%S")
-        total += (t2 - t1).total_seconds() / 60
-
-    return total
 
 def get_all_vehicles(conn):
     cur = conn.cursor()
@@ -96,6 +57,7 @@ def get_all_vehicles(conn):
         FROM readings
     """)
     return [row[0] for row in cur.fetchall()]
+
 
 EXPECTED_TRAVEL_TIMES = {
     ("PULA-ENTRANCE", "RIJEKA-EXIT"): 90,
@@ -106,39 +68,79 @@ EXPECTED_TRAVEL_TIMES = {
     ("RIJEKA-ENTRANCE", "PULA-EXIT"): 90,
 }
 
+
 def detect_fast_vehicles(conn):
     results = []
+    cur = conn.cursor()
 
     vehicles = get_all_vehicles(conn)
 
     for vehicle_id in vehicles:
-        entry, exit_ = get_vehicle_entry_exit(conn, vehicle_id)
 
-        if not entry or not exit_:
-            continue
+        cur.execute("""
+            SELECT camera_id, timestamp
+            FROM readings
+            WHERE vehicle_id = ?
+              AND is_exit = 1
+            ORDER BY timestamp ASC
+        """, (vehicle_id,))
+        exits = cur.fetchall()
 
-        entry_cam, entry_ts = entry
-        exit_cam, exit_ts = exit_
+        for exit_cam, exit_ts in exits:
+            t_exit = datetime.strptime(exit_ts, "%Y-%m-%d %H:%M:%S")
 
-        route = (entry_cam, exit_cam)
-        if route not in EXPECTED_TRAVEL_TIMES:
-            continue
+            cur.execute("""
+                SELECT camera_id, timestamp
+                FROM readings
+                WHERE vehicle_id = ?
+                  AND is_entrance = 1
+                  AND timestamp < ?
+                ORDER BY timestamp DESC
+                LIMIT 1
+            """, (vehicle_id, exit_ts))
+            entry = cur.fetchone()
 
-        t_entry = datetime.strptime(entry_ts, "%Y-%m-%d %H:%M:%S")
-        t_exit = datetime.strptime(exit_ts, "%Y-%m-%d %H:%M:%S")
+            if not entry:
+                continue
 
-        total_time = (t_exit - t_entry).total_seconds() / 60
-        rest_time = get_restarea_time(conn, vehicle_id)
+            entry_cam, entry_ts = entry
+            route = (entry_cam, exit_cam)
 
-        actual_travel = total_time - rest_time
-        expected = EXPECTED_TRAVEL_TIMES[route]
+            if route not in EXPECTED_TRAVEL_TIMES:
+                continue
 
-        if actual_travel < expected:
-            results.append({
-                "vehicle_id": vehicle_id,
-                "route": route,
-                "actual": round(actual_travel, 2),
-                "expected": expected
-            })
+            t_entry = datetime.strptime(entry_ts, "%Y-%m-%d %H:%M:%S")
+
+            total_time = (t_exit - t_entry).total_seconds() / 60
+
+            cur.execute("""
+                SELECT timestamp_entrance, timestamp_exit
+                FROM readings
+                WHERE vehicle_id = ?
+                  AND is_restarea = 1
+                  AND timestamp_entrance >= ?
+                  AND timestamp_exit <= ?
+                  AND timestamp_exit IS NOT NULL
+            """, (vehicle_id, entry_ts, exit_ts))
+
+            rest_time = 0
+            for start, end in cur.fetchall():
+                t1 = datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
+                t2 = datetime.strptime(end, "%Y-%m-%d %H:%M:%S")
+                rest_time += (t2 - t1).total_seconds() / 60
+
+            actual = total_time - rest_time
+            expected = EXPECTED_TRAVEL_TIMES[route]
+
+            if actual <= 0:
+                continue
+
+            if actual < expected:
+                results.append({
+                    "vehicle_id": vehicle_id,
+                    "route": route,
+                    "actual": round(actual, 2),
+                    "expected": expected
+                })
 
     return results
