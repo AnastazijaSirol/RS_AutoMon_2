@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 def count_entrances(conn):
     cur = conn.cursor()
     cur.execute("""

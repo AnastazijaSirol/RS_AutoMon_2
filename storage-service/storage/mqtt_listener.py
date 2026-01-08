@@ -13,7 +13,7 @@ BROKER = os.getenv("BROKER")
 PORT = int(os.getenv("PORT"))
 
 TOPICS = [
-    ("traffic/entrance", 0),
+    ("traffic/entrance", 0), # najviše jednom
     ("traffic/camera", 0),
     ("traffic/restarea", 0),
     ("traffic/exit", 0),

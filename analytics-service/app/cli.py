@@ -31,7 +31,7 @@ def speeding():
 
     for v, cam, speed, limit in rows:
         typer.echo(
-            f"{v} @ {cam}: {speed} km/h (limit {limit})"
+            f"{v} na {cam}: {speed} km/h (limit {limit})"
         )
 
 @app.command()
