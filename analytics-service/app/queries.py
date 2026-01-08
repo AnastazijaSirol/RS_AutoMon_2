@@ -128,7 +128,7 @@ def detect_fast_vehicles(conn):
                 t2 = datetime.strptime(end, "%Y-%m-%d %H:%M:%S")
                 rest_time += (t2 - t1).total_seconds() / 60
 
-            actual = total_time - rest_time
+            actual = total_time
             expected = EXPECTED_TRAVEL_TIMES[route]
 
             if actual <= 0:
